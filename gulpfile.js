@@ -8,7 +8,7 @@
     gulp.src('src/**/*.js')
     .pipe(babel())
     .on('error', swallowError)
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest('lib'));
   });
 
   gulp.task('watch', function() {
