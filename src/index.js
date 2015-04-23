@@ -1,3 +1,4 @@
+require("babel/polyfill");
 var program = require('commander');
 
 program
@@ -11,3 +12,9 @@ console.log('You\'re using the database type:');
 if (program.sql) console.log(' - SQL Server');
 if (program.psql) console.log(' - PostgreSQL');
 if (program.mongo) console.log(' - MongoDB');
+
+
+const foo = "bar";
+console.log(foo);
+
+// foo = "baz";
