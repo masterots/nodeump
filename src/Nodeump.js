@@ -1,7 +1,8 @@
 require("babel/polyfill");
 let pg = require("pg");
 let Q = require("q");
-let Exporter = require('./Exporter');
+let Exporter = require('./postgres/Exporter');
+let Importer = require('./postgres/Importer');
 let client;
 
 function createConnection(connectionString) {
@@ -35,6 +36,14 @@ class Nodeump {
         let exporter = new Exporter(client, this.dataplan);
         return exporter.runQueriesForDataplan();
       });
+  }
+
+  importData() {
+    return createConnection(this.getConnectionString())
+      .then(client => {
+        let importer = new Importer(client, this.dataplan);
+        return importer.runQueriesForDataplan();
+      })
   }
 }
 

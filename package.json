@@ -9,8 +9,10 @@
   "author": "Joshua Melvin",
   "license": "MIT",
   "dependencies": {
+    "chalk": "^1.0.0",
     "json2csv": "^2.2.1",
     "pg": "^4.3.0",
+    "pg-copy-streams": "^0.3.0",
     "q": "^1.2.0"
   },
   "devDependencies": {
