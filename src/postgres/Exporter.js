@@ -1,12 +1,12 @@
 let Q = require('q');
 let fs = require('fs');
+let Connection = require(`./Connection`);
 let copyTo = require('pg-copy-streams').to;
 let chalk = require('chalk');
 
 class Exporter {
-  constructor(client, dataplan) {
-    this.client = client;
-    this.dataplan = dataplan;
+  constructor(config) {
+    this.config = config;
   }
 
   runQuery(client, tableName) {
@@ -27,8 +27,11 @@ class Exporter {
   }
 
   runQueriesForDataplan() {
-    let queries = this.dataplan.map(table => {
-      return this.runQuery(this.client, table.tableName);
+    let connection = new Connection(this.config);
+    let queries = connection.getConnection().then(client => {
+      return this.config.dataplan.map(table => {
+        return this.runQuery(client, table.tableName);
+      });
     });
     return Q.allSettled(queries);
   }

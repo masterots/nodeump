@@ -13,19 +13,11 @@ class Nodeump {
     };
     this.Exporter = require(`./${this.config.dialect}/Exporter`);
     this.Importer = require(`./${this.config.dialect}/Importer`);
-    this.Connection = require(`./${this.config.dialect}/Connection`);
   }
 
   exportData() {
-    //let connection = new this.Connection(this.config);
-    //return connection.getConnection()
-    //  .then(client => {
-    //    let exporter = new this.Exporter(client, this.config.dataplan);
-    //    return exporter.runQueriesForDataplan();
-    //  });
     let exporter = new this.Exporter(this.config);
     return exporter.runQueriesForDataplan();
-
   }
 
   importData() {
