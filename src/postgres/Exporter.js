@@ -28,7 +28,7 @@ class Exporter {
 
   runQueriesForDataplan() {
     let queries = this.dataplan.map(table => {
-      return this.runQuery(this.client, table);
+      return this.runQuery(this.client, table.tableName);
     });
     return Q.allSettled(queries);
   }

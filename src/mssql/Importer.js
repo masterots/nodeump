@@ -31,21 +31,6 @@ class Importer {
 
     client.execSql(request);
 
-    //let stream = client.query(copyFrom(`COPY ${tableName} FROM STDIN WITH CSV HEADER`));
-    //let fileStream = fs.createReadStream(`csvs/${tableName}.csv`);
-    //
-    //fileStream
-    //  .on('error', err => {
-    //    deferred.reject(err);
-    //  });
-    //
-    //fileStream.pipe(stream)
-    //  .on('finish', () => {
-    //    deferred.resolve('done');
-    //  }).on('error', err => {
-    //    deferred.reject(err);
-    //  });
-
     return deferred.promise;
   }
 

@@ -8,7 +8,8 @@ class Connection {
       password: config.password,
       server: config.host,
       options: {
-        database: config.database
+        database: config.database,
+        rowCollectionOnDone: true
       }
     };
   }
