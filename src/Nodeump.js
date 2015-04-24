@@ -1,47 +1,35 @@
 require("babel/polyfill");
-let pg = require("pg");
-let Q = require("q");
-let Exporter = require('./postgres/Exporter');
-let Importer = require('./postgres/Importer');
 let client;
-
-function createConnection(connectionString) {
-  let deferred = new Q.defer();
-  client = new pg.Client(connectionString);
-  client.connect(err => {
-    if (err) {
-      deferred.reject(err);
-    }
-    deferred.resolve(client);
-  });
-  return deferred.promise;
-}
 
 class Nodeump {
   constructor(options) {
-    this.username = options.username;
-    this.password = options.password;
-    this.host = options.host;
-    this.database = options.database;
-    this.dataplan = options.dataplan;
-  }
-
-  getConnectionString() {
-    return `postgres://${this.username}:${this.password}@${this.host}/${this.database}`;
+    this.config = {
+      username: options.username,
+      password: options.password,
+      host: options.host,
+      database: options.database,
+      dataplan: options.dataplan,
+      dialect: options.dialect || 'postgres'
+    };
+    this.Exporter = require(`./${this.config.dialect}/Exporter`);
+    this.Importer = require(`./${this.config.dialect}/Importer`);
+    this.Connection = require(`./${this.config.dialect}/Connection`);
   }
 
   exportData() {
-    return createConnection(this.getConnectionString())
+    let connection = new this.Connection(this.config);
+    return connection.getConnection()
       .then(client => {
-        let exporter = new Exporter(client, this.dataplan);
+        let exporter = new this.Exporter(client, this.config.dataplan);
         return exporter.runQueriesForDataplan();
       });
   }
 
   importData() {
-    return createConnection(this.getConnectionString())
+    let connection = new this.Connection(this.config);
+    return connection.getConnection()
       .then(client => {
-        let importer = new Importer(client, this.dataplan);
+        let importer = new this.Importer(client, this.config.dataplan);
         return importer.runQueriesForDataplan();
       })
   }
