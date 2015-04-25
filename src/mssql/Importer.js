@@ -1,44 +1,82 @@
 let Q = require('q');
 let fs = require('fs');
+let _ = require('lodash');
+let Connection = require('./Connection');
 let Request = require('tedious').Request;
 let chalk = require('chalk');
+let SchemaUtil = require('./SchemaUtil');
+let baby = require('babyparse');
 
 class Importer {
-  constructor(client, dataplan) {
-    this.client = client;
-    this.dataplan = dataplan;
+  constructor(config) {
+    this.config = config;
   }
 
-  runQuery(client, tableName) {
+  runQuery(client, table, schemas) {
     let deferred = new Q.defer();
 
-    let fileData = fs.readFileSync(`csvs/${tableName}.csv`);
-    console.log(fileData.toString());
-
-    let request = new Request(`BULK INSERT test_table
-                                FROM 'csvs/${tableName}.csv'
-                                WITH
-                                (
-                                  FIELDTERMINATOR = ',',
-                                  ROWTERMINATOR = '\n'
-                                )`, (err, rowCount) => {
-      if (err) {
-        console.log(err);
-        deferred.reject(err);
-      }
-      deferred.resolve(rowCount);
+    let columnSchemasForTable = _.filter(schemas, schema => {
+      let cleanTableName = table.tableName.replace(/\[/g, "").replace(/\]/g, "");
+      return `${schema.table_schema}.${schema.table_name}` === cleanTableName;
     });
 
-    client.execSql(request);
+    let fileContents = fs.readFileSync(`csvs/${table.tableName}.csv`, {encoding: 'utf-8'});
+    let parsed = baby.parse(fileContents, { header: true });
+    let rows = parsed.data;
+
+    let bulkLoad = client.newBulkLoad(table.tableName, (error, rowCount) => {
+      if (error) {
+        console.log(table.tableName);
+        console.log(error);
+        deferred.reject(error);
+      }
+      console.log(`inserted rowCount rows for ${table.tableName}`);
+      deferred.resolve(table.tableName);
+    });
+
+    columnSchemasForTable.forEach(column => {
+      let columnOptions = {};
+      if (column.is_nullable) {
+        columnOptions.nullable = true;
+      }
+      if (column.data_type === 'varchar' || column.data_type === 'nvarchar') {
+        columnOptions.length = column.max_length >= 0 ? column.max_length : 8001;
+      }
+      if (column.data_type === 'decimal' || column.data_type === 'numeric') {
+        columnOptions.scale = column.scale;
+      }
+      if (column.data_type === 'decimal' || column.data_type === 'numeric') {
+        columnOptions.precision = column.precision;
+      }
+      bulkLoad.addColumn(column.column_name, column.data_type, columnOptions);
+    });
+
+    rows.forEach(row => {
+      bulkLoad.addRow(row);
+    });
+
+    client.execBulkLoad(bulkLoad);
 
     return deferred.promise;
   }
 
   runQueriesForDataplan() {
-    let queries = this.dataplan.map(table => {
-      return this.runQuery(this.client, table);
-    });
-    return Q.allSettled(queries);
+    return SchemaUtil.getTableSchemas(this.config)
+      .then(schemas => {
+        let queries = this.config.dataplan.map(table => {
+          let connection = new Connection(this.config);
+          return connection.getConnection()
+            .then(client => {
+              return this.runQuery(client, table, schemas);
+            });
+        });
+        return Q.allSettled(queries);
+      });
+
+    //let queries = this.dataplan.map(table => {
+    //  return this.runQuery(this.client, table);
+    //});
+    //return Q.allSettled(queries);
   }
 }
 

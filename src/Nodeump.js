@@ -21,12 +21,8 @@ class Nodeump {
   }
 
   importData() {
-    let connection = new this.Connection(this.config);
-    return connection.getConnection()
-      .then(client => {
-        let importer = new this.Importer(client, this.config.dataplan);
-        return importer.runQueriesForDataplan();
-      })
+    let importer = new this.Importer(this.config);
+    return importer.runQueriesForDataplan();
   }
 }
 

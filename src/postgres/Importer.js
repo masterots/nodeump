@@ -1,12 +1,12 @@
 let Q = require('q');
 let fs = require('fs');
+let Connection = require(`./Connection`);
 let copyFrom = require('pg-copy-streams').from;
 let chalk = require('chalk');
 
 class Importer {
-  constructor(client, dataplan) {
-    this.client = client;
-    this.dataplan = dataplan;
+  constructor(config) {
+    this.config = config;
   }
 
   runQuery(client, tableName) {
@@ -22,6 +22,7 @@ class Importer {
 
     fileStream.pipe(stream)
       .on('finish', () => {
+        console.log(chalk.bold.yellow(`${tableName}.csv imported`));
         deferred.resolve('done');
       }).on('error', err => {
         deferred.reject(err);
@@ -31,8 +32,11 @@ class Importer {
   }
 
   runQueriesForDataplan() {
-    let queries = this.dataplan.map(table => {
-      return this.runQuery(this.client, table.tableName);
+    let connection = new Connection(this.config);
+    let queries = connection.getConnection().then(client => {
+      return this.config.dataplan.map(table => {
+        return this.runQuery(client, table.tableName);
+      });
     });
     return Q.allSettled(queries);
   }

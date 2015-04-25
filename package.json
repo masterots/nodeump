@@ -9,6 +9,7 @@
   "author": "Joshua Melvin",
   "license": "MIT",
   "dependencies": {
+    "babyparse": "^0.4.3",
     "chalk": "^1.0.0",
     "json2csv": "^2.2.1",
     "lodash": "^3.7.0",
