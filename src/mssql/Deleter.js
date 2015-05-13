@@ -1,8 +1,36 @@
 let Connection = require('./Connection');
+let Request = require('tedious').Request;
 let Q = require('q');
+let _ = require('lodash');
+let TriggerUtil = require('./TriggerUtil');
 
-function runQuery(client, table) {
+function createQuery(dataplan) {
+  let query = '';
+  dataplan.reverse().forEach(table => {
+    if (_.contains(TriggerUtil.getTablesWithTriggers(), table.tableName)) {
+      query += `DISABLE TRIGGER ALL ON ${table.tableName};
+                DELETE FROM ${table.tableName};
+                ENABLE TRIGGER ALL ON ${table.tableName};\n`;
+    } else {
+      query += `DELETE FROM ${table.tableName};\n`;
+    }
+  });
+  return query;
+}
 
+function runQuery(client, query) {
+  let deferred = new Q.defer();
+
+  let request = new Request(query, (err, rowCount) => {
+    if (err) {
+      deferred.reject(err);
+    }
+    deferred.resolve('data removed');
+  });
+
+  client.execSqlBatch(request);
+
+  return deferred.promise;
 }
 
 class Deleter {
@@ -11,14 +39,15 @@ class Deleter {
   }
 
   deleteRecords() {
-    let queries = this.config.dataplan.map(table => {
-      let connection = new Connection(this.config);
-      return connection.getConnection()
-        .then(client => {
-          return this.runQuery(client, table);
-        });
-    });
-    return Q.allSettled(queries);
+    return TriggerUtil.loadTablesWithTriggers(this.config)
+      .then(() => {
+        let query = createQuery(this.config.dataplan);
+        let connection = new Connection(this.config);
+        return connection.getConnection()
+          .then(client => {
+            return runQuery(client, query);
+          });
+      });
   }
 }
 

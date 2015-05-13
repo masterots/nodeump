@@ -4,6 +4,8 @@ let Connection = require('./Connection');
 let Request = require('tedious').Request;
 let DataTypeUtil = require('./DataTypeUtil');
 
+let _schemas = [];
+
 function getTableSchema(tableName) {
   return tableName.split('.')[0].replace('[', '').replace(']', '');
 }
@@ -36,6 +38,7 @@ function runQuery(config, client) {
     if (err) {
       deferred.reject(err);
     }
+    _schemas = records;
     deferred.resolve(records);
   });
 
@@ -55,7 +58,7 @@ function runQuery(config, client) {
   return deferred.promise;
 }
 
-function getTableSchemas(config) {
+function loadTableSchemas(config) {
   let connection = new Connection(config);
 
   return connection.getConnection()
@@ -64,6 +67,30 @@ function getTableSchemas(config) {
     });
 }
 
+function getTableSchemas() {
+  return _schemas;
+}
+
+function getSchemaForTable(tableName) {
+  return _.filter(_schemas, schema => {
+    let cleanTableName = tableName.replace(/\[/g, "").replace(/\]/g, "");
+    return `${schema.table_schema}.${schema.table_name}` === cleanTableName;
+  });
+}
+
+
+function getColumnInfo(tableName, columnName) {
+  let tableSchema = _.filter(_schemas, schema => {
+    let cleanTableName = tableName.replace(/\[/g, "").replace(/\]/g, "");
+    return `${schema.table_schema}.${schema.table_name}` === cleanTableName;
+  });
+  let columnInfo = _.find(tableSchema, {'column_name': columnName});
+  return columnInfo;
+}
+
 module.exports = {
-  getTableSchemas: getTableSchemas
+  loadTableSchemas: loadTableSchemas,
+  getTableSchemas: getTableSchemas,
+  getSchemaForTable: getSchemaForTable,
+  getColumnInfo: getColumnInfo
 };
