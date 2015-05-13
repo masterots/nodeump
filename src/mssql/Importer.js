@@ -20,7 +20,7 @@ class Importer {
       return `${schema.table_schema}.${schema.table_name}` === cleanTableName;
     });
 
-    let fileContents = fs.readFileSync(`csvs/${table.tableName}.csv`, {encoding: 'utf-8'});
+    let fileContents = fs.readFileSync(`data/${table.tableName}.csv`, {encoding: 'utf-8'});
     let parsed = baby.parse(fileContents, { header: true });
     let rows = parsed.data;
 

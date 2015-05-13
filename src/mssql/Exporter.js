@@ -18,7 +18,7 @@ class Exporter {
   runQuery(client, table) {
     let deferred = new Q.defer();
     let records = [];
-    let writeStream = fs.createWriteStream(`csvs/${table.tableName}.csv`);
+    let writeStream = fs.createWriteStream(`data/${table.tableName}.csv`);
     let request = new Request(`SELECT * FROM ${table.tableName}`, (err, rowCount) => {
       if (err) {
         deferred.reject(err);
