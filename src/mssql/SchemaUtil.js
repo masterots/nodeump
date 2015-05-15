@@ -78,19 +78,38 @@ function getSchemaForTable(tableName) {
   });
 }
 
-
 function getColumnInfo(tableName, columnName) {
   let tableSchema = _.filter(_schemas, schema => {
     let cleanTableName = tableName.replace(/\[/g, "").replace(/\]/g, "");
     return `${schema.table_schema}.${schema.table_name}` === cleanTableName;
   });
-  let columnInfo = _.find(tableSchema, {'column_name': columnName});
-  return columnInfo;
+  return _.find(tableSchema, {'column_name': columnName});
+}
+
+function getTableSchemaInfo(tableName) {
+  let tableSchema = _.filter(_schemas, schema => {
+    let cleanTableName = tableName.replace(/\[/g, "").replace(/\]/g, "");
+    return `${schema.table_schema}.${schema.table_name}` === cleanTableName;
+  });
+  let schema = {
+    datatypes: {},
+    isNullable: {},
+    scale: {},
+    precision: {}
+  };
+  let tableDataTypes = _.forEach(tableSchema, item => {
+    schema.datatypes[item.column_name] = item.data_type;
+    schema.isNullable[item.column_name] = item.is_nullable;
+    schema.scale[item.column_name] = item.scale;
+    schema.precision[item.column_name] = item.precision;
+  });
+  return schema;
 }
 
 module.exports = {
   loadTableSchemas: loadTableSchemas,
   getTableSchemas: getTableSchemas,
   getSchemaForTable: getSchemaForTable,
-  getColumnInfo: getColumnInfo
+  getColumnInfo: getColumnInfo,
+  getTableSchemaInfo: getTableSchemaInfo
 };

@@ -28,7 +28,6 @@ function runQuery(config, client) {
     if (err) {
       deferred.reject(err);
     }
-    console.log(_tablesWithTriggers);
     deferred.resolve(_tablesWithTriggers);
   });
 
