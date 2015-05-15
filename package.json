@@ -2,6 +2,18 @@
   "name": "nodeump",
   "version": "0.1.0",
   "description": "tool for export, import, and reset of your development database",
+  "keywords": ["sql server", "database"],
+  "author": {
+    "name": "Joshua Melvin",
+    "email": "joshua.melvin@gmail.com"
+  },
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/masterots/nodeump"
+  },
+  "bugs": {
+    "url" : "https://github.com/masterots/nodeump/issues"
+  },
   "main": "index.js",
   "scripts": {
     "test": "jasmine"
